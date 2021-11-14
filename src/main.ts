@@ -5,6 +5,9 @@ import { createRoute } from './http-router.js';
 import { registerHandler } from './handlers/register.http.js';
 import { infoHandler } from './handlers/info.http.js';
 import { connectMongoClient } from './mongodb.js';
+import { loginHandler } from './handlers/login.http.js';
+import { profileHandler } from './handlers/profile.http.js';
+import { addFriendHandler } from './handlers/add-friend.js';
 
 (async () => {
   try {
@@ -16,6 +19,9 @@ import { connectMongoClient } from './mongodb.js';
 
   createRoute('GET', '/info', infoHandler);
   createRoute('POST', '/register', registerHandler);
+  createRoute('POST', '/login', loginHandler);
+  createRoute('POST', '/add-friend', addFriendHandler);
+  createRoute('GET', '/profile', profileHandler);
 
   try {
     await connectMongoClient();

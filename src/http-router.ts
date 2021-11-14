@@ -1,11 +1,28 @@
 import { IncomingMessage, ServerResponse } from 'http';
 import qs from 'qs';
+import { SessionModel } from './domain/session.js';
+import { UserModel } from './domain/user.js';
 import { RequestData } from './http-common.js';
+
+export type IncomingMessageAuthorized = IncomingMessage & {
+  authorization: {
+    session: SessionModel;
+    user: UserModel;
+  };
+};
 
 export interface RequestHandler<Body = unknown, Response = unknown> {
   (data: RequestData<Body>, req: IncomingMessage, res: ServerResponse):
     | Response
     | Promise<Response>;
+}
+
+export interface AuthorizedRequestHandler<Body = unknown, Response = unknown> {
+  (
+    data: RequestData<Body>,
+    req: IncomingMessageAuthorized,
+    res: ServerResponse
+  ): Response | Promise<Response>;
 }
 
 type Route<Body = unknown, Response = unknown> = [
@@ -129,7 +146,9 @@ export function cleanUrl(url: string): string {
 export function createRoute<BODY = unknown, RESPONSE = unknown>(
   method: string,
   url: string,
-  handler: RequestHandler<BODY, RESPONSE>
+  handler:
+    | RequestHandler<BODY, RESPONSE>
+    | AuthorizedRequestHandler<BODY, RESPONSE>
 ): void {
   const methodMap = route_map.get(method);
 

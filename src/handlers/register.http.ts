@@ -1,8 +1,8 @@
 import Joi from 'joi';
 import { RequestData, uuid, validate } from '../http-common.js';
 import { BadRequestError } from '../http-errors.js';
-import { getUsersCollection } from '../mongodb.js';
 import { hash as argonHash } from 'argon2';
+import { createUserDto, getUsersCollection, UserDto } from '../domain/user.js';
 
 export interface RegisterInputDto {
   username: string;
@@ -21,20 +21,14 @@ export const RegisterInputDtoSchema = Joi.object<RegisterInputDto>({
       'string.pattern.base':
         'Your username must consist only of alphanumeric, _ or - characters',
     }),
-  password: Joi.string().required().min(16).messages({
-    'string.min': 'Your password must be at least 16 characters long',
+  password: Joi.string().required().min(8).messages({
+    'string.min': 'Your password must be at least 8 characters long',
   }),
 });
 
-export interface RegisterOutputDto {
-  id: string;
-  user_id: string;
-  username: string;
-}
-
 async function register({
   body,
-}: RequestData<RegisterInputDto>): Promise<RegisterOutputDto> {
+}: RequestData<RegisterInputDto>): Promise<UserDto> {
   const { username, password } = body;
 
   const authdb = getUsersCollection();
@@ -49,19 +43,19 @@ async function register({
 
   const encrypted_password = await argonHash(password);
 
-  const document = {
+  const user_properties = {
     user_id: uuid(),
     username,
     password: encrypted_password,
+    friends: [],
   };
 
-  const result = await authdb.insertOne(document);
+  const result = await authdb.insertOne(user_properties);
 
-  return {
-    id: result.insertedId.toJSON(),
-    user_id: document.user_id,
-    username: document.username,
-  };
+  return createUserDto({
+    id: result.insertedId,
+    ...user_properties,
+  });
 }
 
 export const registerHandler = validate(RegisterInputDtoSchema, register);

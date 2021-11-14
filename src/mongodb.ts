@@ -1,4 +1,4 @@
-import { Collection, Db, MongoClient } from 'mongodb';
+import { Db, MongoClient } from 'mongodb';
 import { getEnvironment } from './environment.js';
 
 const environment = getEnvironment();
@@ -28,8 +28,4 @@ export function getMongoClient(): MongoClient {
 
 export function getDatabase(): Db {
   return getMongoClient().db(environment.mongo_db_name);
-}
-
-export function getUsersCollection(): Collection {
-  return getDatabase().collection('users');
 }
